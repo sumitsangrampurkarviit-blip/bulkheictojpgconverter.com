@@ -1,0 +1,79 @@
+---
+import Layout from "../layouts/Layout.astro";
+import LegalPage from "../components/LegalPage.astro";
+
+const title = "Privacy Policy – Bulk HEIC to JPG Converter";
+const description =
+	"Privacy policy for BulkHEICtoJPGConverter.com. We process no personal data — all file conversion happens locally in your browser.";
+---
+
+<Layout title={title} description={description}>
+	<LegalPage title="Privacy Policy">
+		<p>
+			This Privacy Policy explains how
+			<strong> BulkHEICtoJPGConverter.com </strong> ("we", "us", or "this
+			website") handles your information when you use our online HEIC to JPG
+			converter tool.
+		</p>
+
+		<h2>1. No file uploads, no data collection</h2>
+		<p>
+			Our converter is a client-side tool. When you convert HEIC or HEIF
+			photos, the files are processed entirely in your own browser using
+			WebAssembly. <strong> Your photos are never uploaded to our servers </strong>,
+			never stored, never viewed, and never transmitted anywhere. Once you
+			close the page, nothing remains.
+		</p>
+
+		<h2>2. No personal information</h2>
+		<p>
+			We do not require registration, do not collect your name, email address,
+			phone number, or any other personally identifiable information to use
+			the tool.
+		</p>
+
+		<h2>3. Analytics</h2>
+		<p>
+			Like most websites, we may use privacy-respecting analytics to
+			understand aggregate traffic patterns (for example, how many visitors
+			the page receives). This data is anonymous and does not identify you
+			personally.
+		</p>
+
+		<h2>4. Cookies</h2>
+		<p>
+			We may use a small cookie to remember your dark-mode / light-mode
+			preference. This is stored locally in your browser and does not track
+			you across other websites.
+		</p>
+
+		<h2>5. Advertising</h2>
+		<p>
+			This website may display advertisements served by third-party ad
+			networks (such as Google AdSense). These partners may use cookies to
+			serve ads based on your prior visits. You can learn more about how
+			Google uses data at
+			<a href="https://policies.google.com/technologies/partner-sites"
+				>policies.google.com</a
+			>.
+		</p>
+
+		<h2>6. Children's privacy</h2>
+		<p>
+			Our service is not directed to children under 13, and we do not
+			knowingly collect any data from them.
+		</p>
+
+		<h2>7. Changes to this policy</h2>
+		<p>
+			We may update this Privacy Policy from time to time. Any changes will be
+			posted on this page with an updated "last modified" date.
+		</p>
+
+		<h2>8. Contact</h2>
+		<p>
+			If you have any questions about this Privacy Policy, please contact us
+			through our <a href="/contact">Contact page</a>.
+		</p>
+	</LegalPage>
+</Layout>

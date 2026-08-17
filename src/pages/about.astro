@@ -1,0 +1,53 @@
+---
+import Layout from "../layouts/Layout.astro";
+
+const title = "About Us – Bulk HEIC to JPG Converter";
+const description =
+	"Learn about BulkHEICtoJPGConverter.com — a fast, private, and free batch HEIC to JPG converter that runs entirely in your browser.";
+---
+
+<Layout title={title} description={description}>
+	<section class="mx-auto max-w-3xl px-4 py-14 sm:px-6">
+		<p class="text-sm text-zinc-500">About</p>
+		<h1 class="mt-3 text-3xl font-semibold tracking-tight">
+			Why we built this
+		</h1>
+		<p class="mt-6 leading-relaxed text-zinc-600 dark:text-zinc-300">
+			HEIC is a brilliant format — iPhone photos take up about half the space
+			of the equivalent JPG. But that brilliance falls apart the moment you
+			need to send, upload, or open those photos on a Windows PC, an Android
+			phone, or any website that doesn't understand HEIC.
+		</p>
+		<p class="mt-4 leading-relaxed text-zinc-600 dark:text-zinc-300">
+			We kept running into that exact wall: a dozen iPhone photos that refused
+			to upload to a form, email, or old photo editor. Every "free" online
+			converter we found was either painfully slow, limited to a few files,
+			or — worse — uploaded our private photos to some server.
+		</p>
+		<p class="mt-4 leading-relaxed text-zinc-600 dark:text-zinc-300">
+			So we built the tool we wished existed: a <strong>batch</strong> HEIC to
+			JPG converter that is <strong>fast</strong>, <strong>free</strong>,
+			<strong>unlimited</strong>, and <strong>100% private</strong> — because
+			every conversion happens locally, on your own device. Nothing is ever
+			uploaded.
+		</p>
+		<p class="mt-4 leading-relaxed text-zinc-600 dark:text-zinc-300">
+			We hope it saves you as much time and frustration as it saved us.
+		</p>
+
+		<div class="mt-10 grid gap-4 sm:grid-cols-3">
+			<div class="rounded-2xl border border-zinc-200 p-5 text-center dark:border-zinc-800">
+				<p class="text-2xl font-semibold">0</p>
+				<p class="mt-1 text-sm text-zinc-500">uploads. Ever.</p>
+			</div>
+			<div class="rounded-2xl border border-zinc-200 p-5 text-center dark:border-zinc-800">
+				<p class="text-2xl font-semibold">∞</p>
+				<p class="mt-1 text-sm text-zinc-500">file limit</p>
+			</div>
+			<div class="rounded-2xl border border-zinc-200 p-5 text-center dark:border-zinc-800">
+				<p class="text-2xl font-semibold">$0</p>
+				<p class="mt-1 text-sm text-zinc-500">free, forever</p>
+			</div>
+		</div>
+	</section>
+</Layout>

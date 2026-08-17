@@ -1,0 +1,217 @@
+---
+import Layout from "../layouts/Layout.astro";
+import HeicConverter from "../components/HeicConverter.astro";
+
+const title = "Bulk HEIC to JPG Converter – Convert Multiple HEIC Photos Online Free";
+const description =
+	"Convert unlimited HEIC and HEIF photos to JPG in your browser. Batch convert hundreds of iPhone photos at once, download as ZIP, 100% free and private — no uploads.";
+
+const faqs = [
+	{
+		question: "How do I convert multiple HEIC files to JPG?",
+		answer:
+			"Just drag and drop all your HEIC or HEIF photos onto the converter above, click 'Convert to JPG', and every file is converted instantly in your browser. You can download each JPG individually or get all of them in a single ZIP file.",
+	},
+	{
+		question: "Is it really free to convert HEIC to JPG in bulk?",
+		answer:
+			"Yes. There are no limits, no sign-ups, no watermarks, and no paid tiers. You can convert hundreds or even thousands of photos in one batch completely for free.",
+	},
+	{
+		question: "Are my photos uploaded to a server?",
+		answer:
+			"No. The entire conversion happens locally on your device using WebAssembly. Your photos never leave your computer or phone, which means your privacy is fully protected.",
+	},
+	{
+		question: "How many HEIC files can I convert at once?",
+		answer:
+			"There is no artificial limit. The only constraint is your device's available memory. You can process 200, 500, or 1000+ photos in a single batch.",
+	},
+	{
+		question: "Why do my iPhone photos come as HEIC files?",
+		answer:
+			"Apple switched to HEIC as the default camera format since iOS 11 because it stores photos at roughly half the size of JPG while keeping the same quality. However, Windows, Android, and many other devices cannot open HEIC files natively, which is why conversion is needed.",
+	},
+	{
+		question: "Does converting HEIC to JPG reduce image quality?",
+		answer:
+			"Our converter preserves the original pixel dimensions and uses a high quality setting of 92%. Visually, the JPG output looks identical to the original HEIC photo.",
+	},
+	{
+		question: "Does it work on Windows, Mac, Android and iPhone?",
+		answer:
+			"Yes. The tool runs in any modern browser — Chrome, Firefox, Edge, Safari — on Windows, macOS, Linux, Android, and iOS. No software installation is required.",
+	},
+];
+
+const faqSchema = JSON.stringify({
+	"@context": "https://schema.org",
+	"@type": "FAQPage",
+	mainEntity: faqs.map((f) => ({
+		"@type": "Question",
+		name: f.question,
+		acceptedAnswer: { "@type": "Answer", text: f.answer },
+	})),
+});
+
+const softwareSchema = JSON.stringify({
+	"@context": "https://schema.org",
+	"@type": "WebApplication",
+	name: "Bulk HEIC to JPG Converter",
+	url: "https://bulkheictojpgconverter.com/",
+	applicationCategory: "MultimediaApplication",
+	operatingSystem: "Any",
+	offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+	description:
+		"Free online tool to convert unlimited HEIC and HEIF photos to JPG in bulk, directly in your browser with no uploads.",
+});
+
+const jsonLd = [faqSchema, softwareSchema].join("\n");
+
+const steps = [
+	{
+		icon: "1",
+		title: "Drag & drop your HEIC photos",
+		text: "Select one or hundreds of HEIC / HEIF files from your iPhone, computer, or any device.",
+	},
+	{
+		icon: "2",
+		title: "Click 'Convert to JPG'",
+		text: "Every photo is converted instantly right inside your browser — no upload, no waiting on servers.",
+	},
+	{
+		icon: "3",
+		title: "Download as ZIP",
+		text: "Download the JPGs individually or grab the entire batch in one tidy ZIP file.",
+	},
+];
+
+const features = [
+	{
+		title: "Unlimited batch conversion",
+		text: "No file caps. Convert 50, 500, or 5000 photos in one go.",
+	},
+	{
+		title: "100% private & local",
+		text: "Files are processed on your device and never uploaded to any server.",
+	},
+	{
+		title: "Free, forever",
+		text: "No sign-ups, no watermarks, no paid plans, no daily limits.",
+	},
+	{
+		title: "Preserves quality",
+		text: "Keeps original resolution with a high-quality JPG output.",
+	},
+	{
+		title: "Works everywhere",
+		text: "Runs on Windows, Mac, Linux, Android, and iPhone in any modern browser.",
+	},
+	{
+		title: "Batch ZIP download",
+		text: "Export your entire converted photo album as a single ZIP archive.",
+	},
+];
+---
+
+<Layout title={title} description={description} jsonLd={jsonLd}>
+	<section class="mx-auto max-w-4xl px-4 pt-16 pb-4 text-center sm:px-6 sm:pt-20">
+		<span
+			class="inline-flex items-center gap-2 rounded-full border border-zinc-200 bg-zinc-50 px-3 py-1 text-xs font-medium text-zinc-600 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-300"
+		>
+			<span class="h-1.5 w-1.5 rounded-full bg-emerald-500" aria-hidden="true"></span>
+			100% Free &middot; No Uploads &middot; Unlimited
+		</span>
+		<h1 class="mt-5 text-4xl font-semibold tracking-tight sm:text-5xl">
+			Bulk HEIC to JPG Converter
+		</h1>
+		<p class="mx-auto mt-4 max-w-2xl text-lg text-zinc-600 dark:text-zinc-300">
+			Convert unlimited iPhone HEIC photos to JPG in seconds — right in your
+			browser. Batch convert, download as ZIP, and keep your photos 100%
+			private.
+		</p>
+	</section>
+
+	<HeicConverter />
+
+	<section class="mx-auto max-w-6xl px-4 py-16 sm:px-6">
+		<h2 class="text-center text-2xl font-semibold tracking-tight">
+			How it works
+		</h2>
+		<div class="mt-8 grid gap-6 sm:grid-cols-3">
+			{
+				steps.map((s) => (
+					<div
+						class="rounded-2xl border border-zinc-200 p-6 dark:border-zinc-800"
+					>
+						<span
+							class="flex h-9 w-9 items-center justify-center rounded-lg bg-zinc-900 text-sm font-semibold text-white dark:bg-white dark:text-zinc-900"
+						>
+							{s.icon}
+						</span>
+						<h3 class="mt-4 font-medium">{s.title}</h3>
+						<p class="mt-2 text-sm text-zinc-600 dark:text-zinc-400">{s.text}</p>
+					</div>
+				))
+			}
+		</div>
+	</section>
+
+	<section class="border-t border-zinc-200 bg-zinc-50 py-16 dark:border-zinc-800 dark:bg-zinc-900/50">
+		<div class="mx-auto max-w-6xl px-4 sm:px-6">
+			<h2 class="text-center text-2xl font-semibold tracking-tight">
+				Why convert HEIC to JPG?
+			</h2>
+			<p
+				class="mx-auto mt-4 max-w-2xl text-center text-zinc-600 dark:text-zinc-300"
+			>
+				HEIC is Apple's default photo format. It's efficient, but it isn't
+				compatible with Windows, Android, most online forms, and older
+				software. JPG works everywhere — so converting lets you share, upload,
+				and use your photos without friction.
+			</p>
+			<div class="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+				{
+					features.map((f) => (
+						<div class="rounded-2xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
+							<h3 class="font-medium">{f.title}</h3>
+							<p class="mt-2 text-sm text-zinc-600 dark:text-zinc-400">{f.text}</p>
+						</div>
+					))
+				}
+			</div>
+		</div>
+	</section>
+
+	<section class="mx-auto max-w-3xl px-4 py-16 sm:px-6">
+		<h2 class="text-center text-2xl font-semibold tracking-tight">
+			Frequently asked questions
+		</h2>
+		<div class="mt-8 space-y-4">
+			{
+				faqs.map((f) => (
+					<details
+						class="group rounded-2xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-900"
+					>
+						<summary class="flex cursor-pointer list-none items-center justify-between font-medium">
+							{f.question}
+							<svg
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="2"
+								class="h-4 w-4 shrink-0 text-zinc-400 transition-transform group-open:rotate-180"
+								aria-hidden="true"
+							>
+								<path d="M6 9l6 6 6-6" />
+							</svg>
+						</summary>
+						<p class="mt-3 text-sm leading-relaxed text-zinc-600 dark:text-zinc-400">
+							{f.answer}
+						</p>
+					</details>
+				))
+			}
+		</div>
+	</section>
+</Layout>

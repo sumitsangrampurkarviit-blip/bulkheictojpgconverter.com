@@ -1,0 +1,336 @@
+---
+interface Props {
+	title?: string;
+	description?: string;
+}
+const { title = "Convert", description = "" } = Astro.props;
+---
+
+<section class="mx-auto max-w-3xl px-4 sm:px-6 py-10">
+	<div
+		id="converter"
+		class="rounded-2xl border border-zinc-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900"
+	>
+		<!-- Dropzone -->
+		<div
+			id="dropzone"
+			class="relative m-4 flex flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-zinc-300 px-6 py-14 text-center transition-colors dark:border-zinc-700"
+			role="button"
+			tabindex="0"
+			aria-label="Upload HEIC files"
+		>
+			<svg
+				viewBox="0 0 24 24"
+				fill="none"
+				stroke="currentColor"
+				stroke-width="1.5"
+				class="h-10 w-10 text-zinc-400"
+				aria-hidden="true"
+			>
+				<path d="M12 16V4M7 9l5-5 5 5" />
+				<path d="M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3" />
+			</svg>
+			<div>
+				<p class="text-base font-medium text-zinc-800 dark:text-zinc-100">
+					Drag &amp; drop HEIC / HEIF photos here
+				</p>
+				<p class="mt-1 text-sm text-zinc-500">
+					or click to browse &middot; unlimited files &middot; 100% private
+				</p>
+			</div>
+			<input
+				id="file-input"
+				type="file"
+				accept=".heic,.heif,image/heic,image/heif"
+				multiple
+				class="hidden"
+			/>
+		</div>
+
+		<!-- Status -->
+		<div id="status" class="hidden px-6 pb-4 text-sm text-zinc-500"></div>
+
+		<!-- File list -->
+		<ul id="file-list" class="hidden mx-4 mb-4 max-h-72 divide-y divide-zinc-100 overflow-y-auto rounded-lg border border-zinc-200 dark:divide-zinc-800 dark:border-zinc-800"></ul>
+
+		<!-- Actions -->
+		<div id="actions" class="hidden flex-col gap-3 px-6 pb-6 sm:flex-row">
+			<button
+				id="convert-btn"
+				class="inline-flex items-center justify-center gap-2 rounded-lg bg-zinc-900 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-zinc-700 dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-200"
+			>
+				Convert to JPG
+			</button>
+			<button
+				id="download-zip-btn"
+				disabled
+				class="inline-flex items-center justify-center gap-2 rounded-lg border border-zinc-300 px-5 py-2.5 text-sm font-medium text-zinc-700 transition enabled:hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-40 dark:border-zinc-700 dark:text-zinc-200 dark:enabled:hover:bg-zinc-800"
+			>
+				Download all as ZIP
+			</button>
+			<button
+				id="clear-btn"
+				class="inline-flex items-center justify-center rounded-lg px-4 py-2.5 text-sm font-medium text-zinc-500 transition hover:text-zinc-900 dark:hover:text-white"
+			>
+				Clear
+			</button>
+		</div>
+	</div>
+
+	<p class="mx-auto mt-4 max-w-3xl px-4 text-center text-xs text-zinc-400 sm:px-6">
+		All conversion happens locally in your browser. Your photos are never
+		uploaded to any server.
+	</p>
+</section>
+
+<script>
+	import JSZip from "jszip";
+
+	const heicLibPromise = import("libheif-js/libheif-wasm/libheif-bundle.mjs");
+
+	async function getLibheif() {
+		const mod = await heicLibPromise;
+		return typeof mod.default === "function" ? mod.default() : mod.default;
+	}
+
+	function decodeHeifImage(libheif, uint8Array) {
+		return new Promise((resolve, reject) => {
+			const decoder = new libheif.HeifDecoder();
+			const images = decoder.decode(uint8Array);
+			if (!images || images.length === 0) {
+				reject(new Error("ERR_LIBHEIF no images found"));
+				return;
+			}
+			const image = images[0];
+			const width = image.get_width();
+			const height = image.get_height();
+
+			if (typeof OffscreenCanvas !== "undefined") {
+				const canvas = new OffscreenCanvas(width, height);
+				const ctx = canvas.getContext("2d");
+				const imageData = ctx.createImageData(width, height);
+				image.display(imageData, (displayData) => {
+					if (!displayData) {
+						reject(new Error("ERR_LIBHEIF display failed"));
+						return;
+					}
+					ctx.putImageData(imageData, 0, 0);
+					canvas.convertToBlob({ type: "image/jpeg", quality: 0.92 }).then(resolve).catch(reject);
+				});
+			} else {
+				const canvas = document.createElement("canvas");
+				canvas.width = width;
+				canvas.height = height;
+				const ctx = canvas.getContext("2d");
+				const imageData = ctx.createImageData(width, height);
+				image.display(imageData, (displayData) => {
+					if (!displayData) {
+						reject(new Error("ERR_LIBHEIF display failed"));
+						return;
+					}
+					ctx.putImageData(imageData, 0, 0);
+					canvas.toBlob(
+						(blob) => (blob ? resolve(blob) : reject(new Error("JPEG encode failed"))),
+						"image/jpeg",
+						0.92
+					);
+				});
+			}
+		});
+	}
+
+	const dropzone = document.getElementById("dropzone");
+	const fileInput = document.getElementById("file-input");
+	const fileList = document.getElementById("file-list");
+	const status = document.getElementById("status");
+	const actions = document.getElementById("actions");
+	const convertBtn = document.getElementById("convert-btn");
+	const downloadZipBtn = document.getElementById("download-zip-btn");
+	const clearBtn = document.getElementById("clear-btn");
+
+	let files = [];
+	let converted = new Map(); // name -> Blob
+
+	function formatBytes(bytes) {
+		if (bytes === 0) return "0 B";
+		const k = 1024;
+		const sizes = ["B", "KB", "MB", "GB"];
+		const i = Math.floor(Math.log(bytes) / Math.log(k));
+		return `${(bytes / Math.pow(k, i)).toFixed(1)} ${sizes[i]}`;
+	}
+
+	function render() {
+		fileList.innerHTML = "";
+		if (files.length === 0) {
+			fileList.classList.add("hidden");
+			actions.classList.add("hidden");
+			actions.classList.remove("flex");
+			return;
+		}
+		fileList.classList.remove("hidden");
+		fileList.classList.add("block");
+		actions.classList.remove("hidden");
+		actions.classList.add("flex");
+
+		files.forEach((file) => {
+			const outName = file.name.replace(/\.(heic|heif)$/i, ".jpg");
+			const done = converted.has(outName);
+			const li = document.createElement("li");
+			li.className = "flex items-center justify-between gap-3 px-4 py-2.5";
+			li.innerHTML = `
+				<div class="flex min-w-0 items-center gap-3">
+					<span class="h-2.5 w-2.5 shrink-0 rounded-full ${
+						done ? "bg-emerald-500" : "bg-amber-400"
+					}" aria-hidden="true"></span>
+					<span class="truncate text-sm text-zinc-800 dark:text-zinc-100">${file.name}</span>
+				</div>
+				${
+					done
+						? `<button data-name="${outName}" class="shrink-0 rounded-md px-2 py-1 text-xs font-medium text-emerald-600 hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-emerald-950">Download</button>`
+						: `<span class="shrink-0 text-xs text-zinc-400">${formatBytes(file.size)}</span>`
+				}
+			`;
+			fileList.appendChild(li);
+		});
+	}
+
+	function setStatus(msg) {
+		status.classList.remove("hidden");
+		status.textContent = msg;
+	}
+
+	function clearAll() {
+		files = [];
+		converted = new Map();
+		fileInput.value = "";
+		render();
+		status.classList.add("hidden");
+		downloadZipBtn.disabled = true;
+	}
+
+	dropzone?.addEventListener("click", () => fileInput?.click());
+	dropzone?.addEventListener("keydown", (e) => {
+		if (e.key === "Enter" || e.key === " ") {
+			e.preventDefault();
+			fileInput?.click();
+		}
+	});
+
+	["dragover", "dragenter"].forEach((evt) =>
+		dropzone?.addEventListener(evt, (e) => {
+			e.preventDefault();
+			dropzone.classList.add("border-zinc-500", "bg-zinc-50", "dark:bg-zinc-800");
+		})
+	);
+	["dragleave", "drop"].forEach((evt) =>
+		dropzone?.addEventListener(evt, (e) => {
+			e.preventDefault();
+			dropzone.classList.remove("border-zinc-500", "bg-zinc-50", "dark:bg-zinc-800");
+		})
+	);
+
+	dropzone?.addEventListener("drop", (e) => {
+		const dropped = Array.from(e.dataTransfer?.files ?? []);
+		const heic = dropped.filter((f) => /\.(heic|heif)$/i.test(f.name));
+		if (heic.length === 0) {
+			setStatus("No HEIC or HEIF files detected in the drop.");
+			return;
+		}
+		files = [...files, ...heic];
+		converted.clear();
+		render();
+		setStatus(`${files.length} file(s) ready. Click "Convert to JPG".`);
+	});
+
+	fileInput?.addEventListener("change", () => {
+		const selected = Array.from(fileInput.files ?? []).filter((f) =>
+			/\.(heic|heif)$/i.test(f.name)
+		);
+		if (selected.length === 0) {
+			setStatus("Please select HEIC or HEIF files only.");
+			return;
+		}
+		files = [...files, ...selected];
+		converted.clear();
+		render();
+		setStatus(`${files.length} file(s) ready. Click "Convert to JPG".`);
+	});
+
+	convertBtn?.addEventListener("click", async () => {
+		if (files.length === 0) return;
+		convertBtn.disabled = true;
+		setStatus("Loading HEIC decoder…");
+
+		let libheif;
+		try {
+			libheif = await getLibheif();
+		} catch (err) {
+			console.error(err);
+			setStatus("Failed to load the HEIC decoder. Please reload the page and try again.");
+			convertBtn.disabled = false;
+			return;
+		}
+
+		converted = new Map();
+		let failed = [];
+		for (let i = 0; i < files.length; i++) {
+			const file = files[i];
+			setStatus(`Converting ${i + 1} of ${files.length}: ${file.name}`);
+			try {
+				const arrayBuffer = await file.arrayBuffer();
+				const uint8Array = new Uint8Array(arrayBuffer);
+				const blob = await decodeHeifImage(libheif, uint8Array);
+				const baseName = file.name.replace(/\.(heic|heif)$/i, "");
+				converted.set(`${baseName}.jpg`, blob);
+			} catch (err) {
+				console.error(err);
+				failed.push(file.name);
+			}
+		}
+
+		render();
+		downloadZipBtn.disabled = converted.size === 0;
+		convertBtn.disabled = false;
+
+		if (converted.size > 0) {
+			let msg = `Successfully converted ${converted.size} of ${files.length} file(s). Download them individually or as a ZIP.`;
+			if (failed.length > 0) {
+				msg += ` Could not convert: ${failed.join(", ")}.`;
+			}
+			setStatus(msg);
+		} else if (failed.length > 0) {
+			setStatus(
+				`Could not convert: ${failed.join(", ")}. The file may be corrupted or use an unsupported encoding (e.g. 10-bit HDR HEIC).`
+			);
+		}
+	});
+
+	fileList?.addEventListener("click", async (e) => {
+		const target = e.target.closest("button");
+		if (!target) return;
+		const name = target.dataset.name;
+		const blob = converted.get(name);
+		if (!blob) return;
+		const url = URL.createObjectURL(blob);
+		const a = document.createElement("a");
+		a.href = url;
+		a.download = name;
+		a.click();
+		URL.revokeObjectURL(url);
+	});
+
+	downloadZipBtn?.addEventListener("click", async () => {
+		if (converted.size === 0) return;
+		const zip = new JSZip();
+		converted.forEach((blob, name) => zip.file(name, blob));
+		const blob = await zip.generateAsync({ type: "blob" });
+		const url = URL.createObjectURL(blob);
+		const a = document.createElement("a");
+		a.href = url;
+		a.download = "heic-to-jpg.zip";
+		a.click();
+		URL.revokeObjectURL(url);
+	});
+
+	clearBtn?.addEventListener("click", clearAll);
+</script>

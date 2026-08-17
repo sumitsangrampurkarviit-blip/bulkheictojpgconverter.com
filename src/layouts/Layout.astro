@@ -1,0 +1,193 @@
+---
+import "../styles/global.css";
+
+interface Props {
+	title: string;
+	description: string;
+	canonical?: string;
+	image?: string;
+	jsonLd?: string;
+}
+
+const {
+	title,
+	description,
+	canonical = "https://bulkheictojpgconverter.com/",
+	image = "https://bulkheictojpgconverter.com/og-image.png",
+	jsonLd,
+} = Astro.props;
+
+const ogType = "website";
+---
+
+<!doctype html>
+<html lang="en" class="scroll-smooth">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>{title}</title>
+		<meta name="description" content={description} />
+		<meta name="robots" content="index, follow, max-image-preview:large" />
+		<link rel="canonical" href={canonical} />
+		<meta name="theme-color" content="#0a0a0a" />
+
+		<meta property="og:type" content={ogType} />
+		<meta property="og:title" content={title} />
+		<meta property="og:description" content={description} />
+		<meta property="og:url" content={canonical} />
+		<meta property="og:image" content={image} />
+		<meta property="og:site_name" content="Bulk HEIC to JPG Converter" />
+		<meta property="og:locale" content="en_US" />
+
+		<meta name="twitter:card" content="summary_large_image" />
+		<meta name="twitter:title" content={title} />
+		<meta name="twitter:description" content={description} />
+		<meta name="twitter:image" content={image} />
+
+		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<link rel="icon" type="image/png" href="/favicon-32x32.png" />
+		<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+
+		<meta name="generator" content={Astro.generator} />
+
+		{
+			jsonLd && <script type="application/ld+json" set:html={jsonLd} />
+		}
+
+		<script>
+			// Apply saved theme before paint to avoid flash
+			(function () {
+				const stored = localStorage.getItem("theme");
+				if (
+					stored === "dark" ||
+					(!stored && window.matchMedia("(prefers-color-scheme: dark)").matches)
+				) {
+					document.documentElement.classList.add("dark");
+				}
+			})();
+		</script>
+	</head>
+	<body
+		class="min-h-screen bg-white text-zinc-900 antialiased transition-colors dark:bg-zinc-950 dark:text-zinc-100"
+	>
+		<header
+			class="sticky top-0 z-40 border-b border-zinc-200/80 bg-white/80 backdrop-blur-md dark:border-zinc-800/80 dark:bg-zinc-950/80"
+		>
+			<nav
+				class="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6"
+			>
+				<a href="/" class="flex items-center gap-2.5 font-semibold">
+					<span
+						class="flex h-8 w-8 items-center justify-center rounded-lg bg-zinc-900 text-white dark:bg-white dark:text-zinc-900"
+					>
+						<svg
+							viewBox="0 0 24 24"
+							fill="none"
+							stroke="currentColor"
+							stroke-width="2"
+							class="h-4 w-4"
+							aria-hidden="true"
+						>
+							<path
+								d="M3 7a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z"
+							/>
+							<path d="M8 3v3M16 3v3M3 11h18" />
+						</svg>
+					</span>
+					<span class="hidden sm:inline">Bulk HEIC to JPG</span>
+				</a>
+
+				<div class="flex items-center gap-1">
+					<a
+						href="/how-to-convert"
+						class="rounded-md px-3 py-2 text-sm text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white"
+						>How to convert</a
+					>
+					<a
+						href="/about"
+						class="hidden rounded-md px-3 py-2 text-sm text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white sm:inline"
+						>About</a
+					>
+					<a
+						href="/contact"
+						class="hidden rounded-md px-3 py-2 text-sm text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white sm:inline"
+						>Contact</a
+					>
+					<button
+						id="theme-toggle"
+						class="ml-1 inline-flex h-9 w-9 items-center justify-center rounded-md text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-900 dark:hover:text-white"
+						aria-label="Toggle dark mode"
+					>
+						<svg
+							id="icon-sun"
+							viewBox="0 0 24 24"
+							fill="none"
+							stroke="currentColor"
+							stroke-width="2"
+							class="hidden h-5 w-5"
+						>
+							<circle cx="12" cy="12" r="4" />
+							<path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" />
+						</svg>
+						<svg
+							id="icon-moon"
+							viewBox="0 0 24 24"
+							fill="none"
+							stroke="currentColor"
+							stroke-width="2"
+							class="hidden h-5 w-5"
+						>
+							<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+						</svg>
+					</button>
+				</div>
+			</nav>
+		</header>
+
+		<main>
+			<slot />
+		</main>
+
+		<footer
+			class="border-t border-zinc-200/80 dark:border-zinc-800/80"
+		>
+			<div
+				class="mx-auto flex max-w-6xl flex-col gap-4 px-4 py-10 text-sm text-zinc-500 sm:flex-row sm:items-center sm:justify-between sm:px-6"
+			>
+				<p>
+					© {new Date().getFullYear()} BulkHEICtoJPGConverter.com. All rights
+					reserved.
+				</p>
+				<div class="flex flex-wrap gap-4">
+					<a href="/privacy" class="hover:text-zinc-900 dark:hover:text-white">Privacy</a>
+					<a href="/terms" class="hover:text-zinc-900 dark:hover:text-white">Terms</a>
+					<a href="/disclaimer" class="hover:text-zinc-900 dark:hover:text-white">Disclaimer</a>
+					<a href="/contact" class="hover:text-zinc-900 dark:hover:text-white">Contact</a>
+					<a href="/sitemap.xml" class="hover:text-zinc-900 dark:hover:text-white">Sitemap</a>
+				</div>
+			</div>
+		</footer>
+
+		<script>
+			const toggle = document.getElementById("theme-toggle");
+			const iconSun = document.getElementById("icon-sun");
+			const iconMoon = document.getElementById("icon-moon");
+
+			function syncIcon() {
+				const isDark = document.documentElement.classList.contains("dark");
+				iconSun.classList.toggle("hidden", !isDark);
+				iconMoon.classList.toggle("hidden", isDark);
+			}
+			syncIcon();
+
+			toggle?.addEventListener("click", () => {
+				document.documentElement.classList.toggle("dark");
+				localStorage.setItem(
+					"theme",
+					document.documentElement.classList.contains("dark") ? "dark" : "light"
+				);
+				syncIcon();
+			});
+		</script>
+	</body>
+</html>
