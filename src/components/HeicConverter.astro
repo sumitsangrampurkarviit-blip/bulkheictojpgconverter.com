@@ -360,21 +360,37 @@ const { title = "Convert", description = "" } = Astro.props;
 		const name = target.dataset.name;
 		const blob = converted.get(name);
 		if (!blob) return;
-		downloadBlob(blob, name);
+		await downloadBlob(blob, name);
 	});
 
-	// iOS Safari ignores programmatic a[download] clicks on blob URLs.
-	// Opening the blob in a new tab shows a share/save prompt reliably.
-	function downloadBlob(blob, filename) {
-		const isIOS =
+	// iOS Safari ignores programmatic a[download] clicks and can't display
+	// blob URLs in new tabs. The reliable path is the native share sheet,
+	// which offers "Save to Files" / "Save Image".
+	function isIOS() {
+		return (
 			/iPad|iPhone|iPod/.test(navigator.userAgent) ||
-			(navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
-		const url = URL.createObjectURL(blob);
-		if (isIOS) {
-			window.open(url, "_blank");
-			setTimeout(() => URL.revokeObjectURL(url), 60000);
-			return;
+			(navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1)
+		);
+	}
+
+	async function downloadBlob(blob, filename) {
+		if (isIOS() && navigator.share && navigator.canShare) {
+			const file = new File([blob], filename, { type: blob.type });
+			if (navigator.canShare({ files: [file] })) {
+				try {
+					await navigator.share({
+						files: [file],
+						title: filename,
+						text: "Converted file",
+					});
+					return;
+				} catch (err) {
+					// user cancelled the share sheet — fall through to anchor method
+					if (err?.name === "AbortError") return;
+				}
+			}
 		}
+		const url = URL.createObjectURL(blob);
 		const a = document.createElement("a");
 		a.href = url;
 		a.download = filename;
