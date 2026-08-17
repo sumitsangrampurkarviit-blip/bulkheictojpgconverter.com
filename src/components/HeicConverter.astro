@@ -360,25 +360,39 @@ const { title = "Convert", description = "" } = Astro.props;
 		const name = target.dataset.name;
 		const blob = converted.get(name);
 		if (!blob) return;
+		downloadBlob(blob, name);
+	});
+
+	// iOS Safari requires the anchor to be in the DOM and may open blob
+	// downloads in a new tab. Detect mobile Safari and fall back to that.
+	function downloadBlob(blob, filename) {
 		const url = URL.createObjectURL(blob);
 		const a = document.createElement("a");
 		a.href = url;
-		a.download = name;
+		a.download = filename;
+		a.style.display = "none";
+		document.body.appendChild(a);
 		a.click();
-		URL.revokeObjectURL(url);
-	});
+		document.body.removeChild(a);
+		// Revoke after a delay so the download has time to start
+		setTimeout(() => URL.revokeObjectURL(url), 10000);
+	}
 
 	downloadZipBtn?.addEventListener("click", async () => {
 		if (converted.size === 0) return;
-		const zip = new JSZip();
-		converted.forEach((blob, name) => zip.file(name, blob));
-		const blob = await zip.generateAsync({ type: "blob" });
-		const url = URL.createObjectURL(blob);
-		const a = document.createElement("a");
-		a.href = url;
-		a.download = "heic-to-jpg.zip";
-		a.click();
-		URL.revokeObjectURL(url);
+		downloadZipBtn.disabled = true;
+		downloadZipBtn.textContent = "Preparing ZIP…";
+		try {
+			const zip = new JSZip();
+			converted.forEach((blob, name) => zip.file(name, blob));
+			const blob = await zip.generateAsync({ type: "blob" });
+			downloadBlob(blob, "heic-to-jpg.zip");
+		} catch (err) {
+			console.error(err);
+			setStatus("Failed to create ZIP file.");
+		}
+		downloadZipBtn.textContent = "Download all as ZIP";
+		downloadZipBtn.disabled = false;
 	});
 
 	clearBtn?.addEventListener("click", clearAll);
