@@ -41,7 +41,7 @@ const { title = "Convert", description = "" } = Astro.props;
 			<input
 				id="file-input"
 				type="file"
-				accept=".heic,.heif,image/heic,image/heif"
+				accept="image/*,.heic,.heif,image/heic,image/heif"
 				multiple
 				class="hidden"
 			/>
@@ -159,6 +159,25 @@ const { title = "Convert", description = "" } = Astro.props;
 		return `${(bytes / Math.pow(k, i)).toFixed(1)} ${sizes[i]}`;
 	}
 
+	// Detect real file type by magic bytes, not by name (iOS may rename .heic files)
+	async function sniffType(file) {
+		const buf = new Uint8Array(await file.slice(0, 64).arrayBuffer());
+		// JPEG: starts with FF D8 FF
+		if (buf[0] === 0xff && buf[1] === 0xd8 && buf[2] === 0xff) return "jpeg";
+		// HEIC/HEIF: ISO BMFF box, brand string "ftyp" at offset 4
+		if (buf.length >= 12) {
+			const brand = String.fromCharCode(buf[4], buf[5], buf[6], buf[7]);
+			if (brand === "ftyp") {
+				const compat = String.fromCharCode(buf[8], buf[9], buf[10], buf[11]);
+				// heic, heix, hevc, hevx, mif1, msf1, heim, heis, hevm, hevs
+				if (/^(heic|heix|hevc|hevx|mif1|msf1|heim|heis|hevm|hevs)$/i.test(compat)) return "heif";
+			}
+		}
+		// PNG
+		if (buf[0] === 0x89 && buf[1] === 0x50 && buf[2] === 0x4e && buf[3] === 0x47) return "png";
+		return null;
+	}
+
 	function render() {
 		fileList.innerHTML = "";
 		if (files.length === 0) {
@@ -173,7 +192,7 @@ const { title = "Convert", description = "" } = Astro.props;
 		actions.classList.add("flex");
 
 		files.forEach((file) => {
-			const outName = file.name.replace(/\.(heic|heif)$/i, ".jpg");
+			const outName = `${file.name.replace(/\.[^.]+$/, "") || "photo"}.jpg`;
 			const done = converted.has(outName);
 			const li = document.createElement("li");
 			li.className = "flex items-center justify-between gap-3 px-4 py-2.5";
@@ -229,31 +248,55 @@ const { title = "Convert", description = "" } = Astro.props;
 		})
 	);
 
-	dropzone?.addEventListener("drop", (e) => {
+	dropzone?.addEventListener("drop", async (e) => {
 		const dropped = Array.from(e.dataTransfer?.files ?? []);
-		const heic = dropped.filter((f) => /\.(heic|heif)$/i.test(f.name));
-		if (heic.length === 0) {
-			setStatus("No HEIC or HEIF files detected in the drop.");
+		let heic = [];
+		let jpg = [];
+		for (const f of dropped) {
+			try {
+				const t = await sniffType(f);
+				if (t === "heif") heic.push(f);
+				else if (t === "jpeg") jpg.push(f);
+			} catch {
+				// fall back to extension
+				if (/\.(heic|heif)$/i.test(f.name)) heic.push(f);
+			}
+		}
+		if (heic.length === 0 && jpg.length === 0) {
+			setStatus("No HEIC or HEIF photos detected. Please select HEIC/HEIF files.");
 			return;
 		}
-		files = [...files, ...heic];
+		files = [...files, ...heic, ...jpg];
 		converted.clear();
 		render();
-		setStatus(`${files.length} file(s) ready. Click "Convert to JPG".`);
+		setStatus(
+			`${heic.length} HEIC file(s) ready to convert. ${jpg.length} JPG file(s) will pass through as-is.`
+		);
 	});
 
-	fileInput?.addEventListener("change", () => {
-		const selected = Array.from(fileInput.files ?? []).filter((f) =>
-			/\.(heic|heif)$/i.test(f.name)
-		);
-		if (selected.length === 0) {
-			setStatus("Please select HEIC or HEIF files only.");
+	fileInput?.addEventListener("change", async () => {
+		const selected = Array.from(fileInput.files ?? []);
+		let heic = [];
+		let jpg = [];
+		for (const f of selected) {
+			try {
+				const t = await sniffType(f);
+				if (t === "heif") heic.push(f);
+				else if (t === "jpeg") jpg.push(f);
+			} catch {
+				if (/\.(heic|heif)$/i.test(f.name)) heic.push(f);
+			}
+		}
+		if (heic.length === 0 && jpg.length === 0) {
+			setStatus("Please select HEIC or HEIF photos only.");
 			return;
 		}
-		files = [...files, ...selected];
+		files = [...files, ...heic, ...jpg];
 		converted.clear();
 		render();
-		setStatus(`${files.length} file(s) ready. Click "Convert to JPG".`);
+		setStatus(
+			`${heic.length} HEIC file(s) ready to convert. ${jpg.length} JPG file(s) will pass through as-is.`
+		);
 	});
 
 	convertBtn?.addEventListener("click", async () => {
@@ -279,9 +322,15 @@ const { title = "Convert", description = "" } = Astro.props;
 			try {
 				const arrayBuffer = await file.arrayBuffer();
 				const uint8Array = new Uint8Array(arrayBuffer);
-				const blob = await decodeHeifImage(libheif, uint8Array);
-				const baseName = file.name.replace(/\.(heic|heif)$/i, "");
-				converted.set(`${baseName}.jpg`, blob);
+				const type = await sniffType(file);
+				let blob;
+				if (type === "jpeg") {
+					blob = new Blob([uint8Array], { type: "image/jpeg" });
+				} else {
+					blob = await decodeHeifImage(libheif, uint8Array);
+				}
+				const baseName = file.name.replace(/\.[^.]+$/, "");
+				converted.set(`${baseName || "photo"}.jpg`, blob);
 			} catch (err) {
 				console.error(err);
 				failed.push(file.name);
