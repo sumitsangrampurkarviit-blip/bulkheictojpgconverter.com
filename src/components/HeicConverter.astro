@@ -363,10 +363,18 @@ const { title = "Convert", description = "" } = Astro.props;
 		downloadBlob(blob, name);
 	});
 
-	// iOS Safari requires the anchor to be in the DOM and may open blob
-	// downloads in a new tab. Detect mobile Safari and fall back to that.
+	// iOS Safari ignores programmatic a[download] clicks on blob URLs.
+	// Opening the blob in a new tab shows a share/save prompt reliably.
 	function downloadBlob(blob, filename) {
+		const isIOS =
+			/iPad|iPhone|iPod/.test(navigator.userAgent) ||
+			(navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
 		const url = URL.createObjectURL(blob);
+		if (isIOS) {
+			window.open(url, "_blank");
+			setTimeout(() => URL.revokeObjectURL(url), 60000);
+			return;
+		}
 		const a = document.createElement("a");
 		a.href = url;
 		a.download = filename;
@@ -374,7 +382,6 @@ const { title = "Convert", description = "" } = Astro.props;
 		document.body.appendChild(a);
 		a.click();
 		document.body.removeChild(a);
-		// Revoke after a delay so the download has time to start
 		setTimeout(() => URL.revokeObjectURL(url), 10000);
 	}
 
