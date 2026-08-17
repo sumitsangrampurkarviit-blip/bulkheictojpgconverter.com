@@ -112,6 +112,39 @@ const features = [
 		text: "Export your entire converted photo album as a single ZIP archive.",
 	},
 ];
+
+const comparison = [
+	{
+		feature: "Convert multiple files at once",
+		us: true,
+		them: "Single file at a time",
+	},
+	{
+		feature: "Download all results as one ZIP",
+		us: true,
+		them: false,
+	},
+	{
+		feature: "Photos uploaded to a server",
+		us: "Never — processed locally",
+		them: "Uploaded to the cloud",
+	},
+	{
+		feature: "Account / sign-up required",
+		us: false,
+		them: "Login available",
+	},
+	{
+		feature: "File size or quantity limits",
+		us: false,
+		them: "Varies by tool",
+	},
+	{
+		feature: "Watermarks on output",
+		us: false,
+		them: "Common",
+	},
+];
 ---
 
 <Layout title={title} description={description} jsonLd={jsonLd}>
@@ -180,6 +213,60 @@ const features = [
 					))
 				}
 			</div>
+		</div>
+	</section>
+
+	<section class="mx-auto max-w-3xl px-4 py-16 sm:px-6">
+		<h2 class="text-center text-2xl font-semibold tracking-tight">
+			Why choose this converter over others?
+		</h2>
+		<div
+			class="mt-8 overflow-hidden rounded-2xl border border-zinc-200 dark:border-zinc-800"
+		>
+			<table class="w-full text-left text-sm">
+				<thead>
+					<tr
+						class="border-b border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900"
+					>
+						<th class="px-4 py-3 font-medium">Feature</th>
+						<th class="px-4 py-3 font-semibold">This tool</th>
+						<th class="px-4 py-3 text-zinc-600 dark:text-zinc-400">
+							Many other converters
+						</th>
+					</tr>
+				</thead>
+				<tbody>
+					{
+						comparison.map((c) => (
+							<tr
+								class="border-b border-zinc-200 last:border-0 dark:border-zinc-800"
+							>
+								<td class="px-4 py-3">{c.feature}</td>
+								<td class="px-4 py-3">
+									{c.us === true ? (
+										<span class="font-medium text-emerald-600 dark:text-emerald-400">
+											Yes
+										</span>
+									) : c.us === false ? (
+										<span class="text-zinc-400">No</span>
+									) : (
+										<span class="font-medium text-emerald-600 dark:text-emerald-400">
+											{c.us}
+										</span>
+									)}
+								</td>
+								<td class="px-4 py-3 text-zinc-600 dark:text-zinc-400">
+									{c.them === false ? (
+										<span class="text-zinc-400">No</span>
+									) : (
+										c.them
+									)}
+								</td>
+							</tr>
+						))
+					}
+				</tbody>
+			</table>
 		</div>
 	</section>
 
