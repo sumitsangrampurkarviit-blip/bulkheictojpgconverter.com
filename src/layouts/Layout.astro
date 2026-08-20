@@ -12,7 +12,7 @@ interface Props {
 const {
 	title,
 	description,
-	canonical = "https://bulkheictojpgconverter.com/",
+	canonical = new URL(Astro.url.pathname, Astro.site).toString().replace(/\/$/, "") + "/",
 	image = "https://bulkheictojpgconverter.com/og-image.png",
 	jsonLd,
 } = Astro.props;
